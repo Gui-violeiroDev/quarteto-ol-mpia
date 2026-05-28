@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/style.css">
+    <title>Orçamento - Quarteto Olympia</title>
+</head>
+<body>
+<header>
+    <div class="header-inner">
+        <figure>
+            <img src="../img/logo.png" alt="Logo Quarteto Olympia">
+        </figure>
+        <nav>
+            <a href="../index.html">Olympia</a>
+        <a href="biografia.html">Biografia</a>
+        <a href="galeria.html">Galeria</a>
+        <span id="nav-auth"></span>
+        </nav>
+    </div>
+</header>
+
+<section class="conteudo">
+    <div id="alerta"></div>
+
+    <!-- ══ LAYOUT DOIS PAINÉIS ══ -->
+    <div class="orcamento-layout">
+
+        <!-- PAINEL ESQUERDO: LOGIN -->
+        <div class="painel-login">
+            <h2>🔐 Acesso ao Sistema</h2>
+            <br>
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <button class="btn" id="tab-login" onclick="mostrarTab('login')">Entrar</button>
+                <button class="btn" style="background:#aaa;" id="tab-cadastro" onclick="mostrarTab('cadastro')">Cadastrar</button>
+            </div>
+
+            <!-- LOGIN -->
+            <div id="form-login" class="formulario">
+                <div class="form-group">
+                    <label>Email <span class="required">*</span></label>
+                    <input type="email" id="login-email" placeholder="seu@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Senha <span class="required">*</span></label>
+                    <input type="password" id="login-senha" placeholder="Mínimo 6 caracteres">
+                </div>
+                <button class="btn btn-block" onclick="fazerLogin()">ENTRAR</button>
+                <br><br>
+                <p style="font-size:0.8rem; color:#888; text-align:center;">
+                    Admin: admin@olympia.com / admin123<br>
+                    Teste: guilherme@olympia.com / senha123
+                </p>
+            </div>
+
+            <!-- CADASTRO -->
+            <div id="form-cadastro" class="formulario" style="display:none;">
+                <div class="form-group">
+                    <label>Nome Completo <span class="required">*</span></label>
+                    <input type="text" id="cad-nome" placeholder="Seu nome completo">
+                </div>
+                <div class="form-group">
+                    <label>Email <span class="required">*</span></label>
+                    <input type="email" id="cad-email" placeholder="seu@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Senha <span class="required">*</span></label>
+                    <input type="password" id="cad-senha" placeholder="Mínimo 6 caracteres">
+                </div>
+                <div class="form-group">
+                    <label>Telefone</label>
+                    <input type="text" id="cad-telefone" placeholder="(11) 91234-5678">
+                </div>
+                <button class="btn btn-block" onclick="fazerCadastro()">CADASTRAR</button>
+            </div>
+        </div>
+
+        <!-- DIVISOR -->
+        <div class="painel-divisor"></div>
+
+        <!-- PAINEL DIREITO: ORÇAMENTO -->
+        <div class="painel-orcamento" id="painel-orcamento">
+            <h2>🎻 Solicitar Orçamento</h2>
+            <br>
+
+            <div id="login-aviso" class="alert alert-info" style="display:none;">
+                Faça login ao lado para solicitar um orçamento!
+            </div>
+
+            <div id="form-orcamento">
+                <!-- DADOS DO CLIENTE -->
+                <div class="formulario" style="margin-bottom:16px;">
+                    <div class="card-header">📋 Dados do Cliente</div><br>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome Completo <span class="required">*</span></label>
+                            <input type="text" id="nome" placeholder="Seu nome completo">
+                        </div>
+                        <div class="form-group">
+                            <label>Email <span class="required">*</span></label>
+                            <input type="email" id="email" placeholder="seu@email.com">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Telefone <span class="required">*</span></label>
+                            <input type="text" id="telefone" placeholder="(11) 91234-5678">
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo de Evento <span class="required">*</span></label>
+                            <select id="tipo-evento">
+                                <option value="">Selecione...</option>
+                                <option>Casamento</option>
+                                <option>Aniversário</option>
+                                <option>Bodas</option>
+                                <option>Corporativo</option>
+                                <option>Evento Beneficente</option>
+                                <option>Outro</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DADOS DO EVENTO -->
+                <div class="formulario" style="margin-bottom:16px;">
+                    <div class="card-header">📍 Local e Data</div><br>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Data do Evento <span class="required">*</span></label>
+                            <input type="date" id="data-evento">
+                        </div>
+                        <div class="form-group">
+                            <label>Hora do Evento <span class="required">*</span></label>
+                            <input type="time" id="hora-evento" min="08:00" max="22:00">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Endereço <span class="required">*</span></label>
+                        <input type="text" id="endereco" placeholder="Rua, número e complemento">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>CEP <span class="required">*</span></label>
+                            <input type="text" id="cep" placeholder="12345-678">
+                        </div>
+                        <div class="form-group">
+                            <label>Cidade <span class="required">*</span></label>
+                            <input type="text" id="cidade" placeholder="São Paulo">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Estado <span class="required">*</span></label>
+                        <select id="estado">
+                            <option value="">Selecione...</option>
+                            <option value="SP">São Paulo</option><option value="RJ">Rio de Janeiro</option>
+                            <option value="MG">Minas Gerais</option><option value="AC">Acre</option>
+                            <option value="AL">Alagoas</option><option value="AP">Amapá</option>
+                            <option value="AM">Amazonas</option><option value="BA">Bahia</option>
+                            <option value="CE">Ceará</option><option value="DF">Distrito Federal</option>
+                            <option value="ES">Espírito Santo</option><option value="GO">Goiás</option>
+                            <option value="MA">Maranhão</option><option value="MT">Mato Grosso</option>
+                            <option value="MS">Mato Grosso do Sul</option><option value="PA">Pará</option>
+                            <option value="PB">Paraíba</option><option value="PR">Paraná</option>
+                            <option value="PE">Pernambuco</option><option value="PI">Piauí</option>
+                            <option value="RN">Rio Grande do Norte</option><option value="RS">Rio Grande do Sul</option>
+                            <option value="RO">Rondônia</option><option value="RR">Roraima</option>
+                            <option value="SC">Santa Catarina</option><option value="SE">Sergipe</option>
+                            <option value="TO">Tocantins</option>
+                        </select>
+                    </div>
+                    <div id="aviso-fora-sp" class="alert alert-info" style="display:none;">
+                        ⚠️ Evento fora de São Paulo: + R$ 800,00 de deslocamento.
+                    </div>
+                </div>
+
+                <!-- FORMAÇÃO -->
+                <div class="formulario" style="margin-bottom:16px;">
+                    <div class="card-header">🎻 Formação Musical</div><br>
+                    <div id="formacoes-container" class="formacoes-grid">
+                        <div class="loading">Carregando...</div>
+                    </div>
+                </div>
+
+                <!-- PARTITURAS -->
+                <div class="formulario" style="margin-bottom:16px;">
+                    <div class="card-header">🎼 Partituras do Acervo</div>
+                    <p style="font-size:0.85rem;color:#666;margin:8px 0;">Músicas fora do acervo: + R$ 150,00 cada.</p><br>
+                    <div class="partituras-lista" id="partituras-lista">
+                        <div class="loading">Carregando...</div>
+                    </div>
+                    <br>
+                    <div class="form-group">
+                        <label>Qtd. músicas fora do acervo:</label>
+                        <input type="number" id="qtd-novas" value="0" min="0" max="50" style="max-width:120px;" oninput="calcularTotal()">
+                    </div>
+                    <div class="form-group">
+                        <label>Observações:</label>
+                        <textarea id="observacoes" placeholder="Observações sobre o evento..."></textarea>
+                    </div>
+                </div>
+
+                <!-- RESUMO -->
+                <div class="formulario">
+                    <div class="card-header">💰 Resumo</div>
+                    <div class="resumo" id="resumo">
+                        <div class="resumo-linha"><span>Formação</span><span id="r-formacao">-</span></div>
+                        <div class="resumo-linha"><span>Valor base</span><span id="r-base">-</span></div>
+                        <div class="resumo-linha" id="linha-sp" style="display:none;"><span>Deslocamento</span><span>+ R$ 800,00</span></div>
+                        <div class="resumo-linha" id="linha-part" style="display:none;"><span id="r-part-label">Partituras novas</span><span id="r-part-valor">-</span></div>
+                        <div class="resumo-linha resumo-total"><span>TOTAL</span><span id="r-total">Selecione uma formação</span></div>
+                    </div>
+                    <br>
+                    <button class="btn btn-block" onclick="enviarOrcamento()">SOLICITAR ORÇAMENTO</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <br><h3>Quarteto Olympia</h3>
+    <p>quartetolympia@hotmail.com</p>
+    <p>WhatsApp: (11) 95355-0550 - Diego Pereira</p><br><br>
+</footer>
+
+<script src="../js/api.js"></script>
+<script>
+    renderNav('nav-auth');
+
+    // Verificar login
+    if (!isLogado()) {
+        document.getElementById('login-aviso').style.display = 'block';
+        document.getElementById('form-orcamento').style.opacity = '0.4';
+        document.getElementById('form-orcamento').style.pointerEvents = 'none';
+    }
+
+    // Data mínima
+    document.getElementById('data-evento').min = new Date().toISOString().split('T')[0];
+
+    // Tabs login/cadastro
+    function mostrarTab(tab) {
+        document.getElementById('form-login').style.display    = tab === 'login'    ? 'block' : 'none';
+        document.getElementById('form-cadastro').style.display = tab === 'cadastro' ? 'block' : 'none';
+        document.getElementById('tab-login').style.background    = tab === 'login'    ? '' : '#aaa';
+        document.getElementById('tab-cadastro').style.background = tab === 'cadastro' ? '' : '#aaa';
+    }
+
+    async function fazerLogin() {
+        const email = document.getElementById('login-email').value.trim();
+        const senha = document.getElementById('login-senha').value;
+        if (!email || !senha) { mostrarAlerta(document.getElementById('alerta'), 'Preencha email e senha.', 'error'); return; }
+        try {
+            const user = await Auth.login(email, senha);
+            mostrarAlerta(document.getElementById('alerta'), `Bem-vindo, ${user.nome}!`, 'success');
+            // Liberar orçamento
+            document.getElementById('login-aviso').style.display = 'none';
+            document.getElementById('form-orcamento').style.opacity = '1';
+            document.getElementById('form-orcamento').style.pointerEvents = 'auto';
+            renderNav('nav-auth');
+            if (user.role === 'ROLE_ADMIN') {
+                setTimeout(() => window.location.href = 'admin.html', 1000);
+            }
+        } catch(e) {
+            mostrarAlerta(document.getElementById('alerta'), e.message, 'error');
+        }
+    }
+
+    async function fazerCadastro() {
+        const nome  = document.getElementById('cad-nome').value.trim();
+        const email = document.getElementById('cad-email').value.trim();
+        const senha = document.getElementById('cad-senha').value;
+        const tel   = document.getElementById('cad-telefone').value.trim();
+        if (!nome || !email || !senha) { mostrarAlerta(document.getElementById('alerta'), 'Preencha os campos obrigatórios.', 'error'); return; }
+        try {
+            await Auth.cadastrar({ nome, email, senha, telefone: tel });
+            mostrarAlerta(document.getElementById('alerta'), 'Conta criada!', 'success');
+            document.getElementById('login-aviso').style.display = 'none';
+            document.getElementById('form-orcamento').style.opacity = '1';
+            document.getElementById('form-orcamento').style.pointerEvents = 'auto';
+            renderNav('nav-auth');
+        } catch(e) {
+            mostrarAlerta(document.getElementById('alerta'), e.message, 'error');
+        }
+    }
+
+    // CEP
+    document.getElementById('cep').addEventListener('input', e => {
+        let v = e.target.value.replace(/\D/g,'');
+        v = v.replace(/^(\d{5})(\d{0,3})/,'$1-$2');
+        e.target.value = v;
+    });
+    document.getElementById('cep').addEventListener('blur', async function() {
+        const cep = this.value.replace(/\D/g,'');
+        if (cep.length === 8) {
+            try {
+                const r = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                const d = await r.json();
+                if (!d.erro) {
+                    document.getElementById('endereco').value = d.logradouro || '';
+                    document.getElementById('cidade').value   = d.localidade || '';
+                    document.getElementById('estado').value   = d.uf || '';
+                    verificarForaSP();
+                }
+            } catch(e) {}
+        }
+    });
+    document.getElementById('telefone').addEventListener('input', e => {
+        let v = e.target.value.replace(/\D/g,'');
+        v = v.length <= 10 ? v.replace(/(\d{2})(\d{4})(\d{4})/,'($1) $2-$3') : v.replace(/(\d{2})(\d{5})(\d{4})/,'($1) $2-$3');
+        e.target.value = v;
+    });
+    document.getElementById('cidade').addEventListener('input', verificarForaSP);
+
+    function verificarForaSP() {
+        const cidade = document.getElementById('cidade').value.trim().toLowerCase();
+        const foraSP = cidade && cidade !== 'são paulo' && cidade !== 'sao paulo';
+        document.getElementById('aviso-fora-sp').style.display = foraSP ? 'block' : 'none';
+        document.getElementById('linha-sp').style.display = foraSP ? 'flex' : 'none';
+        calcularTotal();
+    }
+
+    // Formações
+    let formacaoSelecionada = null;
+    let todasFormacoes = [];
+
+    async function carregarFormacoes() {
+        try {
+            const data = await Formacoes.listar();
+            todasFormacoes = data.dados;
+            document.getElementById('formacoes-container').innerHTML = todasFormacoes.map(f => `
+                <div class="formacao-card" id="fc-${f.nome}" onclick="selecionarFormacao('${f.nome}')">
+                    <div class="nome">${f.descricao}</div>
+                    <div class="comp">${f.composicao}</div>
+                    <br>
+                    <div class="valor">${formatarMoeda(f.valorBase)}</div>
+                </div>
+            `).join('');
+        } catch(e) {}
+    }
+
+    function selecionarFormacao(nome) {
+        formacaoSelecionada = todasFormacoes.find(f => f.nome === nome);
+        document.querySelectorAll('.formacao-card').forEach(c => c.classList.remove('selecionado'));
+        document.getElementById('fc-' + nome).classList.add('selecionado');
+        calcularTotal();
+    }
+
+    async function carregarPartituras() {
+        try {
+            const data = await Partituras.listar();
+            document.getElementById('partituras-lista').innerHTML = data.dados.map(p => `
+                <div class="partitura-item">
+                    <input type="checkbox" id="pt-${p.id}" value="${p.id}" onchange="calcularTotal()">
+                    <label for="pt-${p.id}">${p.nomeMusica} <span style="color:#888;font-size:0.8rem">— ${p.nomeCompositor}</span></label>
+                </div>
+            `).join('');
+        } catch(e) {}
+    }
+
+    function calcularTotal() {
+        if (!formacaoSelecionada) { document.getElementById('r-total').textContent = 'Selecione uma formação'; return; }
+        const cidade = document.getElementById('cidade').value.trim().toLowerCase();
+        const foraSP = cidade && cidade !== 'são paulo' && cidade !== 'sao paulo';
+        const qtdNovas = parseInt(document.getElementById('qtd-novas').value) || 0;
+        const total = formacaoSelecionada.valorBase + (foraSP ? 800 : 0) + (qtdNovas * 150);
+        document.getElementById('r-formacao').textContent = formacaoSelecionada.descricao;
+        document.getElementById('r-base').textContent = formatarMoeda(formacaoSelecionada.valorBase);
+        document.getElementById('r-total').textContent = formatarMoeda(total);
+        if (qtdNovas > 0) {
+            document.getElementById('linha-part').style.display = 'flex';
+            document.getElementById('r-part-label').textContent = `${qtdNovas} partitura(s) nova(s)`;
+            document.getElementById('r-part-valor').textContent = '+ ' + formatarMoeda(qtdNovas * 150);
+        } else {
+            document.getElementById('linha-part').style.display = 'none';
+        }
+    }
+
+    async function enviarOrcamento() {
+        if (!isLogado()) { mostrarAlerta(document.getElementById('alerta'), 'Faça login primeiro!', 'error'); return; }
+        if (!formacaoSelecionada) { mostrarAlerta(document.getElementById('alerta'), 'Selecione uma formação musical.', 'error'); return; }
+        const partiturasSel = [...document.querySelectorAll('.partitura-item input:checked')].map(c => parseInt(c.value));
+        const payload = {
+            nomeCliente: document.getElementById('nome').value.trim(),
+            emailCliente: document.getElementById('email').value.trim(),
+            telefoneCliente: document.getElementById('telefone').value.trim(),
+            tipoEvento: document.getElementById('tipo-evento').value,
+            dataEvento: document.getElementById('data-evento').value,
+            horaEvento: document.getElementById('hora-evento').value,
+            enderecoEvento: document.getElementById('endereco').value.trim(),
+            cidadeEvento: document.getElementById('cidade').value.trim(),
+            estadoEvento: document.getElementById('estado').value,
+            cepEvento: document.getElementById('cep').value.trim(),
+            tipoFormacao: formacaoSelecionada.nome,
+            partituraIds: partiturasSel,
+            qtdPartiurasNovas: parseInt(document.getElementById('qtd-novas').value) || 0,
+            observacoes: document.getElementById('observacoes').value.trim()
+        };
+        try {
+            await Pedidos.criar(payload);
+            mostrarAlerta(document.getElementById('alerta'), '✅ Orçamento solicitado! Entraremos em contato.', 'success');
+            setTimeout(() => window.location.href = 'pedidos.html', 2000);
+        } catch(e) {
+            mostrarAlerta(document.getElementById('alerta'), '❌ ' + e.message, 'error');
+        }
+    }
+
+    carregarFormacoes();
+    carregarPartituras();
+</script>
+</body>
+</html>
