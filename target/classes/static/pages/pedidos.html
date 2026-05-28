@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/style.css">
+    <title>Meus Pedidos - Quarteto Olympia</title>
+</head>
+<body>
+<header>
+    <nav>
+        <a href="../index.html">Olympia</a>
+        <a href="orcamento.html">Novo Orçamento</a>
+        <span id="nav-auth"></span>
+    </nav>
+    <br>
+    <figure>
+        <img src="../img/logo.png" alt="Logo">
+    </figure>
+</header>
+<br>
+<section class="conteudo">
+    <h1>Meus Pedidos / Orçamentos</h1>
+    <br>
+    <div id="alerta"></div>
+    <div id="lista-pedidos"><div class="loading">Carregando pedidos...</div></div>
+</section>
+<footer>
+    <br><h3>Quarteto Olympia</h3>
+    <p>quartetolympia@hotmail.com</p>
+    <p>WhatsApp: (11) 95355-0550</p><br><br>
+</footer>
+<script src="../js/api.js"></script>
+<script>
+    if (!requireLogin()) {}
+    renderNav('nav-auth');
+
+    async function carregarPedidos() {
+        try {
+            const data = await Pedidos.listar();
+            const cont = document.getElementById('lista-pedidos');
+            if (!data.dados || data.dados.length === 0) {
+                cont.innerHTML = `<div class="card"><p>Nenhum pedido encontrado. <a href="orcamento.html">Solicite um orçamento!</a></p></div>`;
+                return;
+            }
+            cont.innerHTML = data.dados.map(p => `
+                <div class="card">
+                    <div class="card-header">#${p.id} — ${p.tipoEvento} | ${formatarData(p.dataEvento)} às ${p.horaEvento}</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0;">
+                        <div><strong>Cliente:</strong> ${p.nomeCliente}</div>
+                        <div><strong>Formação:</strong> ${p.tipoFormacaoDescricao}</div>
+                        <div><strong>Local:</strong> ${p.cidadeEvento} - ${p.estadoEvento}</div>
+                        <div><strong>Status:</strong> ${badgeStatus(p.status)}</div>
+                        <div><strong>Valor Base:</strong> ${formatarMoeda(p.valorBase)}</div>
+                        ${p.adicionalDeslocamento > 0 ? `<div><strong>Deslocamento:</strong> + ${formatarMoeda(p.adicionalDeslocamento)}</div>` : ''}
+                        ${p.adicionalPartituras > 0   ? `<div><strong>Partituras:</strong> + ${formatarMoeda(p.adicionalPartituras)}</div>` : ''}
+                        <div><strong>Total:</strong> <span style="color:#ff8247;font-weight:bold">${formatarMoeda(p.valorTotal)}</span></div>
+                    </div>
+                    ${p.observacoes ? `<p><strong>Obs:</strong> ${p.observacoes}</p>` : ''}
+                    ${p.status === 'PENDENTE' ? `<button class="btn btn-danger btn-sm" onclick="cancelar(${p.id})">Cancelar Pedido</button>` : ''}
+                </div>
+            `).join('');
+        } catch(e) {
+            document.getElementById('lista-pedidos').innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        }
+    }
+
+    async function cancelar(id) {
+        if (!confirm('Cancelar este pedido?')) return;
+        try {
+            await Pedidos.cancelar(id);
+            mostrarAlerta(document.getElementById('alerta'), 'Pedido cancelado.', 'success');
+            carregarPedidos();
+        } catch(e) {
+            mostrarAlerta(document.getElementById('alerta'), e.message, 'error');
+        }
+    }
+
+    carregarPedidos();
+</script>
+</body>
+</html>
