@@ -191,8 +191,15 @@
                     </div>
                     <br>
                     <div class="form-group">
-                        <label>Qtd. músicas fora do acervo:</label>
-                        <input type="number" id="qtd-novas" value="0" min="0" max="50" style="max-width:120px;" oninput="calcularTotal()">
+                        <label>Músicas fora do acervo: <span style="color:#888;font-weight:normal;font-size:0.85rem;">(+ R$ 150,00 cada)</span></label>
+                        <div style="display:flex;gap:8px;margin-bottom:8px;">
+                            <input type="text" id="input-musica-nova" placeholder="Nome da música desejada..."
+                                style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();adicionarMusicaNova();}">
+                            <button type="button" class="btn" onclick="adicionarMusicaNova()"
+                                style="padding:8px 16px;white-space:nowrap;">+ Adicionar</button>
+                        </div>
+                        <div id="lista-musicas-novas" style="display:flex;flex-direction:column;gap:6px;"></div>
+                        <input type="hidden" id="qtd-novas" value="0">
                     </div>
                     <div class="form-group">
                         <label>Observações:</label>
@@ -358,6 +365,43 @@
         } catch(e) {}
     }
 
+    // ── Músicas fora do acervo ─────────────────────────────────────────────────
+    let musicasNovas = [];
+
+    function adicionarMusicaNova() {
+        const input = document.getElementById('input-musica-nova');
+        const nome = input.value.trim();
+        if (!nome) { input.focus(); return; }
+
+        musicasNovas.push(nome);
+        input.value = '';
+        input.focus();
+        document.getElementById('qtd-novas').value = musicasNovas.length;
+        renderizarMusicasNovas();
+        calcularTotal();
+    }
+
+    function removerMusicaNova(idx) {
+        musicasNovas.splice(idx, 1);
+        document.getElementById('qtd-novas').value = musicasNovas.length;
+        renderizarMusicasNovas();
+        calcularTotal();
+    }
+
+    function renderizarMusicasNovas() {
+        const lista = document.getElementById('lista-musicas-novas');
+        if (musicasNovas.length === 0) { lista.innerHTML = ''; return; }
+        lista.innerHTML = musicasNovas.map((nome, idx) => `
+            <div style="display:flex;align-items:center;gap:8px;background:#f9f4ef;
+                        border:1px solid #e8d9c8;border-radius:8px;padding:6px 12px;">
+                <span style="flex:1;">🎵 ${nome}</span>
+                <span style="color:#888;font-size:0.8rem;">+ R$ 150,00</span>
+                <button type="button" onclick="removerMusicaNova(${idx})"
+                    style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:1rem;padding:0 4px;">✕</button>
+            </div>
+        `).join('');
+    }
+
     function calcularTotal() {
         if (!formacaoSelecionada) { document.getElementById('r-total').textContent = 'Selecione uma formação'; return; }
         const cidade = document.getElementById('cidade').value.trim().toLowerCase();
@@ -380,6 +424,12 @@
         if (!isLogado()) { mostrarAlerta(document.getElementById('alerta'), 'Faça login primeiro!', 'error'); return; }
         if (!formacaoSelecionada) { mostrarAlerta(document.getElementById('alerta'), 'Selecione uma formação musical.', 'error'); return; }
         const partiturasSel = [...document.querySelectorAll('.partitura-item input:checked')].map(c => parseInt(c.value));
+        const qtdNovasVal = parseInt(document.getElementById('qtd-novas').value) || 0;
+        if (partiturasSel.length === 0 && qtdNovasVal === 0) {
+            mostrarAlerta(document.getElementById('alerta'),
+                '⚠️ Informe pelo menos uma música do acervo ou a quantidade de músicas fora do acervo.', 'error');
+            return;
+        }
         const payload = {
             nomeCliente: document.getElementById('nome').value.trim(),
             emailCliente: document.getElementById('email').value.trim(),
@@ -393,8 +443,13 @@
             cepEvento: document.getElementById('cep').value.trim(),
             tipoFormacao: formacaoSelecionada.nome,
             partituraIds: partiturasSel,
-            qtdPartiurasNovas: parseInt(document.getElementById('qtd-novas').value) || 0,
-            observacoes: document.getElementById('observacoes').value.trim()
+            qtdPartiurasNovas: qtdNovasVal,
+            observacoes: (() => {
+                const obs = document.getElementById('observacoes').value.trim();
+                if (musicasNovas.length === 0) return obs;
+                const lista = 'Músicas fora do acervo: ' + musicasNovas.map((n,i) => `${i+1}. ${n}`).join(', ');
+                return obs ? lista + ' | ' + obs : lista;
+            })()
         };
         try {
             await Pedidos.criar(payload);
