@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <title>Quarteto Olympia</title>
+</head>
+<body>
+    <header> 
+    <nav>
+        <a href="#Eventos">Eventos</a>
+        <a href="pages/biografia.html" title="Biografia">Biografia</a>
+        <a href="pages/galeria.html" title="Fotos">Galeria</a>
+        <a href="pages/orcamento.html" title="Orçamento">Orçamento</a>
+        <span id="nav-auth">
+            <a href="pages/login.html" title="Login">Login</a>
+        </span>
+    </nav>
+    <br>
+    <figure>
+        <img src="img/logo.png" alt="Logo">
+    </figure>
+    </header>
+
+<section class="banner">
+    <img id="slide" src="img/imagem1.jpg" alt="Banner Olympia">
+</section>
+<script>
+    let imagens = [
+        "img/imagem1.jpg",
+        "img/imagem2.jpg",
+        "img/imagem3.jpg",
+    ];
+    let index = 0;
+    let slide = document.getElementById("slide");
+    function trocarImagem() {
+        index++;
+        if (index >= imagens.length) { index = 0; }
+        slide.style.opacity = 0;
+        setTimeout(() => { slide.src = imagens[index]; slide.style.opacity = 1; }, 500);
+    }
+    setInterval(trocarImagem, 5000);
+
+    const token = localStorage.getItem('olympia_token');
+    const user = JSON.parse(localStorage.getItem('olympia_user') || 'null');
+    if (token && user) {
+        document.getElementById('nav-auth').innerHTML = `
+            <a href="pages/pedidos.html">Meus Pedidos</a>
+            ${user.role === 'ROLE_ADMIN' ? '<a href="pages/admin.html">Admin</a>' : ''}
+            <a href="#" onclick="logout()">Sair</a>
+        `;
+    }
+    function logout() {
+        localStorage.removeItem('olympia_token');
+        localStorage.removeItem('olympia_user');
+        location.reload();
+    }
+</script>
+<br>
+
+<p class="paragrafo"> A música é a essência da emoção, capaz de tornar<br> momentos em experiências que permanecem na memória.</p>
+
+<br>
+<a href="#" id="Eventos"></a>
+<br>
+<section class="conteudo" id="grid-conteudo">
+<h5>Eventos</h5> 
+<br>
+<div class="grid">
+    <div><figure>
+        <img class="imagens-site" src="img/capelinha.jpg" alt="imagem capela">  
+        <figcaption>Concerto-Capelinha-Arujá</figcaption>
+    </figure></div>
+    <div><figure>
+        <img class="imagens-site" src="img/Concerto_de_Natal-Condominio.jpg" alt="imagem Concerto de natal"> 
+        <figcaption>Natal-Condominio</figcaption> 
+    </figure></div>
+    <div><figure>
+        <img class="imagens-site" src="img/casamento.jpg" alt="imagem de casamento"> 
+        <figcaption>Casamento</figcaption> 
+    </figure></div>
+    <div><figure>
+        <img class="imagens-site" src="img/bandolim.jpg" alt="imagem Quarteto e bandolim">  
+        <figcaption>Show-Ney Marques</figcaption>
+    </figure></div>
+    <div><figure>
+        <img class="imagens-site" src="img/angra.jpg" alt="imagem Show do angra">  
+        <figcaption>Show - Angra</figcaption>
+    </figure></div>
+    <div><figure>
+        <img class="imagens-site" src="img/Haras-2.jpg" alt="Concerto ao ar livre"> 
+        <figcaption>Concerto ao ar livre</figcaption> 
+    </figure></div>
+</div>
+</section>
+<br>
+<a href="pages/orcamento.html"><h5>Clique Aqui e Faça seu Orçamento</h5></a>
+
+<footer> 
+    <br>
+    <h3>Quarteto Olympia</h3>
+    <p>Contato: quartetolympia@hotmail.com</p>
+    <p>WhatsApp:(11) 953550550 - Diego Pereira</p>
+    <br><br>
+</footer>
+
+</body>
+</html>

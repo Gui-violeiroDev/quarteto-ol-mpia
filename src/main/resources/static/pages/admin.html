@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/style.css">
+    <title>Admin - Quarteto Olympia</title>
+</head>
+<body>
+<header>
+    <nav>
+        <a href="../index.html">Olympia</a>
+        <a href="orcamento.html">Novo Orçamento</a>
+        <span id="nav-auth"></span>
+    </nav>
+    <br>
+    <figure>
+        <img src="../img/logo.png" alt="Logo">
+    </figure>
+</header>
+<br>
+<section class="conteudo">
+    <h1>Painel Administrativo</h1>
+    <br>
+    <div id="alerta"></div>
+
+    <!-- TABS ADMIN -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
+        <button class="btn" onclick="mostrarAba('pedidos')">📋 Todos os Pedidos</button>
+        <button class="btn" onclick="mostrarAba('partituras')">🎼 Partituras</button>
+        <button class="btn" onclick="mostrarAba('historico')">📜 Histórico</button>
+    </div>
+
+    <!-- ABA PEDIDOS -->
+    <div id="aba-pedidos">
+        <h2>Todos os Pedidos</h2><br>
+        <div id="todos-pedidos"><div class="loading">Carregando...</div></div>
+    </div>
+
+    <!-- ABA PARTITURAS -->
+    <div id="aba-partituras" style="display:none;">
+        <h2>Gerenciar Partituras</h2><br>
+        <div class="formulario" style="margin-bottom:20px;">
+            <div class="card-header">Adicionar Partitura</div><br>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nome da Música</label>
+                    <input type="text" id="nova-musica" placeholder="Ex: Bohemian Rhapsody">
+                </div>
+                <div class="form-group">
+                    <label>Compositor</label>
+                    <input type="text" id="novo-compositor" placeholder="Ex: Queen">
+                </div>
+            </div>
+            <button class="btn btn-success" onclick="criarPartitura()">+ Adicionar</button>
+        </div>
+        <div id="lista-partituras"><div class="loading">Carregando...</div></div>
+    </div>
+
+    <!-- ABA HISTÓRICO -->
+    <div id="aba-historico" style="display:none;">
+        <h2>Histórico de Operações</h2><br>
+        <div id="lista-historico"><div class="loading">Carregando...</div></div>
+    </div>
+</section>
+
+<footer>
+    <br><h3>Quarteto Olympia</h3>
+    <p>quartetolympia@hotmail.com</p>
+    <p>WhatsApp: (11) 95355-0550</p><br><br>
+</footer>
+<script src="../js/api.js"></script>
+<script>
+    if (!isLogado() || !isAdmin()) { window.location.href = 'login.html'; }
+    renderNav('nav-auth');
+
+    function mostrarAba(aba) {
+        ['pedidos','partituras','historico'].forEach(a => {
+            document.getElementById('aba-' + a).style.display = a === aba ? 'block' : 'none';
+        });
+        if (aba === 'pedidos')    carregarTodosPedidos();
+        if (aba === 'partituras') carregarPartituras();
+        if (aba === 'historico')  carregarHistorico();
+    }
+
+    // ── PEDIDOS ────────────────────────────────────────
+    async function carregarTodosPedidos() {
+        try {
+            const data = await Pedidos.listarTodos();
+            const cont = document.getElementById('todos-pedidos');
+            if (!data.dados?.length) { cont.innerHTML = '<p>Nenhum pedido.</p>'; return; }
+            cont.innerHTML = `
+                <div class="tabela-container">
+                <table>
+                    <thead><tr>
+                        <th>#</th><th>Cliente</th><th>Data</th><th>Formação</th>
+                        <th>Cidade</th><th>Total</th><th>Status</th><th>Ações</th>
+                    </tr></thead>
+                    <tbody>
+                    ${data.dados.map(p => `
+                        <tr>
+                            <td>${p.id}</td>
+                            <td>${p.nomeCliente}<br><small>${p.emailCliente}</small></td>
+                            <td>${formatarData(p.dataEvento)}<br><small>${p.horaEvento}</small></td>
+                            <td>${p.tipoFormacaoDescricao}</td>
+                            <td>${p.cidadeEvento}${p.foraSp ? ' ⚠️' : ''}</td>
+                            <td><strong>${formatarMoeda(p.valorTotal)}</strong></td>
+                            <td>${badgeStatus(p.status)}</td>
+                            <td>
+                                <select onchange="mudarStatus(${p.id}, this.value)" style="padding:4px;border-radius:4px;font-size:0.8rem;">
+                                    <option value="">Alterar...</option>
+                                    <option value="CONFIRMADO">Confirmar</option>
+                                    <option value="CONCLUIDO">Concluído</option>
+                                    <option value="CANCELADO">Cancelar</option>
+                                </select>
+                            </td>
+                        </tr>
+                    `).join('')}
+                    </tbody>
+                </table></div>`;
+        } catch(e) {
+            document.getElementById('todos-pedidos').innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        }
+    }
+
+    async function mudarStatus(id, status) {
+        if (!status) return;
+        try {
+            await Pedidos.atualizarStatus(id, status);
+            mostrarAlerta(document.getElementById('alerta'), `Pedido #${id} atualizado para ${status}.`, 'success');
+            carregarTodosPedidos();
+        } catch(e) {
+            mostrarAlerta(document.getElementById('alerta'), e.message, 'error');
+        }
+    }
+
+    // ── PARTITURAS ────────────────────────────────────
+    async function carregarPartituras() {
+        try {
+            const data = await Partituras.listar();
+            const cont = document.getElementById('lista-partituras');
+            cont.innerHTML = `
+                <div class="tabela-container">
+                <table>
+                    <thead><tr><th>#</th><th>Música</th><th>Compositor</th><th>Ação</th></tr></thead>
+                    <tbody>
+                    ${data.dados.map(p => `
+                        <tr>
+                            <td>${p.id}</td>
+                            <td>${p.nomeMusica}</td>
+                            <td>${p.nomeCompositor}</td>
+                            <td><button class="btn btn-danger btn-sm" onclick="removerPartitura(${p.id})">Remover</button></td>
+                        </tr>
+                    `).join('')}
+                    </tbody>
+                </table></div>`;
+        } catch(e) {
+            document.getElementById('lista-partituras').innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        }
+    }
+
+    async function criarPartitura() {
+        const nomeMusica = document.getElementById('nova-musica').value.trim();
+        const nomeCompositor = document.getElementById('novo-compositor').value.trim();
+        if (!nomeMusica || !nomeCompositor) { mostrarAlerta(document.getElementById('alerta'), 'Preencha os dois campos.', 'error'); return; }
+        try {
+            await Partituras.criar({ nomeMusica, nomeCompositor });
+            document.getElementById('nova-musica').value = '';
+            document.getElementById('novo-compositor').value = '';
+            mostrarAlerta(document.getElementById('alerta'), 'Partitura adicionada!', 'success');
+            carregarPartituras();
+        } catch(e) {
+            mostrarAlerta(document.getElementById('alerta'), e.message, 'error');
+        }
+    }
+
+    async function removerPartitura(id) {
+        if (!confirm('Remover esta partitura?')) return;
+        try {
+            await Partituras.deletar(id);
+            mostrarAlerta(document.getElementById('alerta'), 'Partitura removida.', 'success');
+            carregarPartituras();
+        } catch(e) {
+            mostrarAlerta(document.getElementById('alerta'), e.message, 'error');
+        }
+    }
+
+    // ── HISTÓRICO ────────────────────────────────────
+    async function carregarHistorico() {
+        try {
+            const data = await Historico.listar();
+            const cont = document.getElementById('lista-historico');
+            cont.innerHTML = `
+                <div class="tabela-container">
+                <table>
+                    <thead><tr><th>#</th><th>Operação</th><th>Descrição</th><th>Tabela</th><th>Data/Hora</th></tr></thead>
+                    <tbody>
+                    ${data.dados.map(h => `
+                        <tr>
+                            <td>${h.id}</td>
+                            <td><strong>${h.operacao}</strong></td>
+                            <td>${h.descricao || '-'}</td>
+                            <td>${h.tabelaAfetada || '-'}</td>
+                            <td>${new Date(h.realizadoEm).toLocaleString('pt-BR')}</td>
+                        </tr>
+                    `).join('')}
+                    </tbody>
+                </table></div>`;
+        } catch(e) {
+            document.getElementById('lista-historico').innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        }
+    }
+
+    // Carrega pedidos por padrão
+    carregarTodosPedidos();
+</script>
+</body>
+</html>
