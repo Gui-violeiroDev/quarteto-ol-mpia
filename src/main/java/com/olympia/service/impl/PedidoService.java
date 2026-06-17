@@ -6,6 +6,7 @@ import com.olympia.dto.response.PedidoResponse;
 import com.olympia.entity.*;
 import com.olympia.enums.StatusPedido;
 import com.olympia.exception.RecursoNaoEncontradoException;
+import com.olympia.exception.RegraDeNegocioException;
 import com.olympia.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,8 +22,8 @@ public class PedidoService {
     private final EmailService emailService;
     private final AgendaService agendaService;
 
-    private static final double ADICIONAL_FORA_SP = 800.0;
-    private static final double CUSTO_PARTITURA_NOVA = 150.0;
+    public static final double ADICIONAL_FORA_SP = 800.0;
+    public static final double CUSTO_PARTITURA_NOVA = 150.0;
 
     public PedidoService(PedidoRepository pedidoRepository, PartituraRepository partituraRepository,
             UsuarioRepository usuarioRepository, HistoricoOperacaoRepository historicoRepository,
@@ -41,8 +42,7 @@ public class PedidoService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado"));
         boolean disponivel = agendaService.verificarDisponibilidade(req.getTipoFormacao(), req.getDataEvento(), req.getHoraEvento());
         double valorBase = req.getTipoFormacao().getValorBase();
-        boolean foraSp = !req.getCidadeEvento().trim().equalsIgnoreCase("São Paulo")
-                && !req.getCidadeEvento().trim().equalsIgnoreCase("Sao Paulo");
+        boolean foraSp = calcularForaSP(req.getCidadeEvento());
         double adicionalDeslocamento = foraSp ? ADICIONAL_FORA_SP : 0.0;
         int qtdNovas = req.getQtdPartiurasNovas() != null ? req.getQtdPartiurasNovas() : 0;
         double adicionalPartituras = qtdNovas * CUSTO_PARTITURA_NOVA;
@@ -69,17 +69,33 @@ public class PedidoService {
         return toResponse(salvo);
     }
 
+    @Transactional(readOnly = true)
     public List<PedidoResponse> listarTodos() {
         return pedidoRepository.findAllByOrderByCriadoEmDesc().stream().map(this::toResponse).toList();
     }
+
+    // FIX: busca por usuarioId OU emailCliente numa única query, sem risco de perder pedidos antigos
+    @Transactional(readOnly = true)
     public List<PedidoResponse> listarPorUsuario(String email) {
-        return pedidoRepository.findByEmailClienteOrderByCriadoEmDesc(email).stream().map(this::toResponse).toList();
+        Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
+        if (usuario != null) {
+            return pedidoRepository.findByUsuarioIdOrEmailCliente(usuario.getId(), email)
+                    .stream().map(this::toResponse).toList();
+        }
+        return pedidoRepository.findByEmailClienteOrderByCriadoEmDesc(email)
+                .stream().map(this::toResponse).toList();
     }
+
+    @Transactional(readOnly = true)
     public PedidoResponse buscarPorId(Long id) { return toResponse(buscarEntidade(id)); }
 
     @Transactional
     public PedidoResponse atualizarStatus(Long id, StatusPedido novoStatus, String emailUsuario) {
         Pedido pedido = buscarEntidade(id);
+        // Regra de negócio: pedido cancelado não pode ser reativado
+        if (pedido.getStatus() == StatusPedido.CANCELADO && novoStatus != StatusPedido.CANCELADO) {
+            throw new RegraDeNegocioException("Pedido cancelado não pode ser reativado");
+        }
         pedido.setStatus(novoStatus);
         Pedido atualizado = pedidoRepository.save(pedido);
         Usuario usuario = usuarioRepository.findByEmail(emailUsuario).orElse(null);
@@ -90,10 +106,29 @@ public class PedidoService {
     @Transactional
     public void deletar(Long id, String emailUsuario) {
         Pedido pedido = buscarEntidade(id);
+        // Regra de negócio: só pedidos PENDENTES podem ser cancelados pelo cliente
+        if (pedido.getStatus() != StatusPedido.PENDENTE) {
+            throw new RegraDeNegocioException("Apenas pedidos PENDENTES podem ser cancelados");
+        }
         pedido.setStatus(StatusPedido.CANCELADO);
         pedidoRepository.save(pedido);
         Usuario usuario = usuarioRepository.findByEmail(emailUsuario).orElse(null);
         registrarHistorico("CANCELAR_PEDIDO", "Pedido cancelado: " + id, id, usuario);
+    }
+
+    // Método utilitário público para facilitar testes unitários
+    public boolean calcularForaSP(String cidade) {
+        if (cidade == null) return false;
+        String normalizado = cidade.trim();
+        return !normalizado.equalsIgnoreCase("São Paulo")
+                && !normalizado.equalsIgnoreCase("Sao Paulo")
+                && !normalizado.equalsIgnoreCase("SP");
+    }
+
+    public double calcularValorTotal(double valorBase, boolean foraSp, int qtdNovas) {
+        double adicionalDeslocamento = foraSp ? ADICIONAL_FORA_SP : 0.0;
+        double adicionalPartituras = qtdNovas * CUSTO_PARTITURA_NOVA;
+        return valorBase + adicionalDeslocamento + adicionalPartituras;
     }
 
     private Pedido buscarEntidade(Long id) {

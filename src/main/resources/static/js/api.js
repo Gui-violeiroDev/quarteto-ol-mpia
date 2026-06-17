@@ -99,7 +99,7 @@ function formatarData(d) {
 
 // Redireciona para login se não estiver logado
 function requireLogin() {
-    if (!isLogado()) { window.location.href = 'login.html'; return false; }
+    if (!isLogado()) { window.location.href = 'orcamento.html'; return false; }
     return true;
 }
 
@@ -115,6 +115,6 @@ function renderNav(navId = 'nav-auth') {
             <a href="#" onclick="logout()">Sair (${u.nome.split(' ')[0]})</a>
         `;
     } else {
-        el.innerHTML = `<a href="login.html">Login</a>`;
+        el.innerHTML = `<a href="orcamento.html">Login</a>`;
     }
 }
