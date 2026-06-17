@@ -1,5 +1,6 @@
 package com.olympia.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -11,7 +12,10 @@ public class HistoricoOperacao {
     @Column(columnDefinition = "TEXT") private String descricao;
     @Column(name = "tabela_afetada", length = 50) private String tabelaAfetada;
     @Column(name = "registro_id") private Long registroId;
-    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "usuario_id") private Usuario usuario;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private Usuario usuario;
     @Column(name = "realizado_em", updatable = false) private LocalDateTime realizadoEm;
 
     @PrePersist public void prePersist() { this.realizadoEm = LocalDateTime.now(); }
